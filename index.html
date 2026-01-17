@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 成熟度評估 (AI Maturity Assessment)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'PingFang TC', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .progress-bar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .option-selected {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4">
+
+    <!-- Header -->
+    <header class="max-w-3xl w-full text-center mb-12">
+        <div class="inline-block p-2 px-4 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-4">
+            Professional AI Consulting Tool
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+            AI 成熟度自我評估
+        </h1>
+        <p class="text-slate-400 text-lg">
+            根據 UNESCO 與 GAIMM 模型，探索你在 AI 時代的核心競爭力與進階路徑。
+        </p>
+    </header>
+
+    <main class="max-w-2xl w-full">
+        <!-- Start View -->
+        <div id="start-view" class="glass-card rounded-2xl p-8 text-center">
+            <div class="mb-6 flex justify-center text-blue-500">
+                <i data-lucide="brain-circuit" size="64"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">準備好了解你的 AI 等級嗎？</h2>
+            <p class="text-slate-400 mb-8 leading-relaxed">
+                本測驗包含 12 道題目，約需 3 分鐘。我們將分析您的工具應用習慣、提示工程能力、以及對 AI 治理的理解。
+            </p>
+            <button onclick="quizManager.start()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                開始評估
+            </button>
+        </div>
+
+        <!-- Quiz View (Hidden by default) -->
+        <div id="quiz-view" class="hidden">
+            <div class="mb-6 flex justify-between items-end">
+                <div>
+                    <span class="text-sm text-slate-400 font-medium">進度</span>
+                    <div class="text-xl font-bold"><span id="current-index">1</span> <span class="text-slate-500">/ 12</span></div>
+                </div>
+                <div class="w-48 h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="ui-progress" class="progress-bar h-full bg-blue-500" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="glass-card rounded-2xl p-6 md:p-10">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-8 leading-tight">
+                    加載問題中...
+                </h2>
+                <div id="options-container" class="space-y-4">
+                    <!-- Options go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Result View (Hidden by default) -->
+        <div id="result-view" class="hidden space-y-6">
+            <div class="glass-card rounded-2xl p-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                <p class="text-blue-400 font-semibold tracking-widest uppercase mb-2">評估結果</p>
+                <h2 id="result-level" class="text-3xl md:text-4xl font-black mb-4 italic">Level 3: 實踐者</h2>
+                
+                <div class="flex justify-center mb-6">
+                    <div class="relative flex items-center justify-center">
+                        <svg class="w-32 h-32 transform -rotate-90">
+                            <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-800" />
+                            <circle id="score-circle" cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="364.4" stroke-dashoffset="364.4" class="text-blue-500 transition-all duration-1000" />
+                        </svg>
+                        <span id="score-text" class="absolute text-2xl font-bold tracking-tighter">0%</span>
+                    </div>
+                </div>
+
+                <p id="result-description" class="text-slate-300 leading-relaxed mb-6">
+                    加載描述中...
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="trending-up" class="text-emerald-400"></i>
+                    下一步建議 (Next Steps)
+                </h3>
+                <ul id="next-steps" class="space-y-4">
+                    <!-- Steps go here -->
+                </ul>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-4 border border-slate-700 hover:bg-slate-800 text-slate-300 rounded-xl transition-all">
+                重新測試
+            </button>
+        </div>
+    </main>
+
+    <footer class="mt-12 text-slate-500 text-sm">
+        &copy; 2024 AI Maturity Assessment Tool. Built for High Performers.
+    </footer>
+
+    <script>
+        // 1. 測驗資料與邏輯架構
+        const questions = [
+            {
+                q: "您是否能準確解釋「生成式 AI (GenAI)」與傳統「搜尋引擎 (Search Engine)」的運作差異？",
+                options: [
+                    { t: "不太確定，對我來說都差不多", s: 1 },
+                    { t: "知道它是產出內容，但不清楚背後機理", s: 2 },
+                    { t: "能清楚解釋模型是在預測下一個字，而非檢索資料庫", s: 3 },
+                    { t: "理解 Transformer 架構及其數據依賴性", s: 4 }
+                ]
+            },
+            {
+                q: "關於 AI 的「幻覺 (Hallucination)」，您的態度通常是？",
+                options: [
+                    { t: "AI 說的應該就是對的", s: 1 },
+                    { t: "曾發現它會出錯，所以現在持保留態度", s: 2 },
+                    { t: "會主動核實 AI 的事實陳述，並針對來源進行查證", s: 3 },
+                    { t: "能透過 Prompt 技巧或 RAG 手段主動減少幻覺發生", s: 5 }
+                ]
+            },
+            {
+                q: "您使用 AI 進行對話（Prompting）時的習慣？",
+                options: [
+                    { t: "簡單幾個字，例如：「幫我寫一封信」", s: 1 },
+                    { t: "會加註背景，例如：「寫一封 200 字道歉信給主管」", s: 2 },
+                    { t: "使用結構化框架 (如 ROLE, Context, Goal, Constraint)", s: 3 },
+                    { t: "使用 Mega-prompts 或開發自定義的 Agent 指令", s: 4 }
+                ]
+            },
+            {
+                q: "在工作流程中，AI 對您而言的角色是？",
+                options: [
+                    { t: "偶爾好玩的玩具", s: 1 },
+                    { t: "遇到特定困難時才去請教的顧問", s: 2 },
+                    { t: "已經是每天處理摘要、翻譯、草稿的必備助手", s: 3 },
+                    { t: "核心工作流的一環，我甚至建立了自動化串接流程", s: 4 }
+                ]
+            },
+            {
+                q: "您是否曾對 AI 給出的「程式碼」或「專業文稿」進行過修改與除錯？",
+                options: [
+                    { t: "我直接複製貼上使用", s: 1 },
+                    { t: "我會大概看一下順不順，不順就重跑一次", s: 2 },
+                    { t: "我具備足夠專業知識，能精準修復 AI 的邏輯錯誤", s: 3 },
+                    { t: "我能引導 AI 一步步思考 (CoT) 來優化複雜代碼", s: 4 }
+                ]
+            },
+            {
+                q: "您是否使用過「Few-shot (少樣本提示)」技術來優化輸出？",
+                options: [
+                    { t: "沒聽說過", s: 1 },
+                    { t: "知道這概念，但很少實作", s: 2 },
+                    { t: "經常在 Prompt 中提供範例，讓 AI 學習特定的口吻", s: 3 },
+                    { t: "會根據不同模型（如 GPT-4 vs Claude 3）調整範例策略", s: 4 }
+                ]
+            },
+            {
+                q: "對於 AI 使用的數據安全與個人隱私，您的意識程度？",
+                options: [
+                    { t: "沒想過這個問題", s: 1 },
+                    { t: "知道不要貼帳號密碼，其他的還好", s: 2 },
+                    { t: "會主動關閉模型的訓練權限，或不輸入敏感商業數據", s: 3 },
+                    { t: "具備資安框架概念，能設計企業級的去識別化 AI 工作流", s: 5 }
+                ]
+            },
+            {
+                q: "您是否嘗試過使用 AI 的 API、開源模型或低代碼工具來「建立自己的小工具」？",
+                options: [
+                    { t: "完全沒有", s: 1 },
+                    { t: "有用過簡單的 GPTs 或 Poe 機器人", s: 2 },
+                    { t: "具備 API 串接或本地佈署模型 (如 Ollama) 的經驗", s: 4 },
+                    { t: "能自主設計並訓練/微調特定的 AI 任務模組", s: 5 }
+                ]
+            },
+            {
+                q: "面對 AI 工具的更新速度，您的學習路徑是？",
+                options: [
+                    { t: "被動接收新聞報導", s: 1 },
+                    { t: "看到同事用什麼就跟著用", s: 2 },
+                    { t: "系統性訂閱專業 AI 報或參與實作研討會", s: 3 },
+                    { t: "主動測試各種新技術架構，並分享給社群或團隊", s: 5 }
+                ]
+            },
+            {
+                q: "您是否能評估一個業務問題「到底適不適合」用 AI 解決？",
+                options: [
+                    { t: "覺得什麼事都能丟 AI 做", s: 1 },
+                    { t: "知道有些數學運算或最新事實它做不好", s: 2 },
+                    { t: "能分析成本、準確度與必要性，決定是否引入 AI", s: 4 },
+                    { t: "能制定組織級的 AI 選型準則與 ROI 評估框架", s: 5 }
+                ]
+            },
+            {
+                q: "您對 AI 倫理（如偏見、失業、版權）的看法與實踐？",
+                options: [
+                    { t: "太遙遠了，跟我無關", s: 1 },
+                    { t: "會注意但不知道怎麼改善", s: 2 },
+                    { t: "在產出內容時，會主動標註 AI 生成並檢查公平性", s: 4 },
+                    { t: "主導推行「設計倫理 (Ethics by Design)」的產品開發", s: 5 }
+                ]
+            },
+            {
+                q: "您是否曾利用「多角色協作 (Multi-Agent)」的概念讓多個 AI 對話產出最佳解？",
+                options: [
+                    { t: "沒聽過這概念", s: 1 },
+                    { t: "聽過但覺得太複雜沒試過", s: 2 },
+                    { t: "曾試過讓不同的 GPT 角色互相檢視作品", s: 3 },
+                    { t: "能使用 AutoGPT、CrewAI 或類似框架建構協作流程", s: 5 }
+                ]
+            }
+        ];
+
+        const levels = {
+            L1: {
+                name: "L1: 啟蒙者 (Novice)",
+                desc: "您正處於初步認識階段。雖然聽說過 AI 的強大，但尚未將其轉化為實際的生產力工具。這是一個充滿機會的起點！",
+                steps: [
+                    "掌握基礎術語：學習 ML、LLM 的基本意義",
+                    "廣泛嘗試工具：下載 ChatGPT、Perplexity 或 Gamma，進行日常查詢",
+                    "建立直觀感受：了解 AI 除了聊天還能做什麼"
+                ],
+                scoreRange: [0, 18]
+            },
+            L2: {
+                name: "L2: 探索者 (Explorer)",
+                desc: "您已經開始積極嘗試 AI 工具，並能解決一些零散任務。您對 AI 的直觀理解正在建立，能察覺到它的優缺點。",
+                steps: [
+                    "學習進階提示工程：練習設定背景與輸出約束條件",
+                    "培養批判性思維：練習檢查 AI 輸出的事實錯誤",
+                    "擴充工具庫：開始尋找適合自己專業領域的垂直 AI 工具"
+                ],
+                scoreRange: [19, 30]
+            },
+            L3: {
+                name: "L3: 實踐者 (Practitioner)",
+                desc: "恭喜！您具備良好的提示素養，能透過迭代優化獲得精確產出。AI 已經成為您提高工作效率的得力助手。",
+                steps: [
+                    "系統化工作流：將 AI 嵌入固定流程中，如會議記錄摘要、代碼清理",
+                    "掌握複雜提示技術：實踐 Few-shot 與 Chain-of-Thought",
+                    "開始關注量化價值：衡量 AI 到底為您節省了多少時間"
+                ],
+                scoreRange: [31, 42]
+            },
+            L4: {
+                name: "L4: 建設者 (Builder)",
+                desc: "您已經具備共創者的特質，能將 AI 系統地融入組織工作流。您具備初步的架構思維，甚至能建立自定義工具。",
+                steps: [
+                    "深入技術底層：學習使用 API 與開源代碼庫 (如 PyTorch, LangChain)",
+                    "模型微調與優化：練習針對特定業務進行 AI 代理設計",
+                    "強化資安意識：建立數據隱私與合規使用的標準流程"
+                ],
+                scoreRange: [43, 52]
+            },
+            L5: {
+                name: "L5: 創新共創者 (Innovator)",
+                desc: "頂尖級別！AI 已是您的核心競爭力。您不僅是使用者，更是 AI 轉型的引領者，能在開發中實踐倫理與系統性創新。",
+                steps: [
+                    "落實設計倫理：在專案初始就納入公平性與安全性考量",
+                    "主導戰略治理：為組織制定 AI 使用規範與法律合規建議",
+                    "引領文化變革：開發新型態的應用範式，賦能他人進行轉型"
+                ],
+                scoreRange: [53, 60]
+            }
+        };
+
+        // 2. 測驗管理器
+        const quizManager = {
+            currentIndex: 0,
+            score: 0,
+            answers: [],
+
+            start() {
+                document.getElementById('start-view').classList.add('hidden');
+                document.getElementById('quiz-view').classList.remove('hidden');
+                this.renderQuestion();
+            },
+
+            renderQuestion() {
+                const q = questions[this.currentIndex];
+                document.getElementById('current-index').innerText = this.currentIndex + 1;
+                document.getElementById('question-text').innerText = q.q;
+                document.getElementById('ui-progress').style.width = `${((this.currentIndex + 1) / questions.length) * 100}%`;
+
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "option-card w-full text-left p-4 rounded-xl glass-card transition-all border border-slate-700 flex items-center justify-between group";
+                    btn.innerHTML = `
+                        <span class="text-slate-200 group-hover:text-white">${opt.t}</span>
+                        <div class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center">
+                            <div class="dot w-2 h-2 rounded-full bg-blue-500 hidden"></div>
+                        </div>
+                    `;
+                    btn.onclick = () => this.handleSelect(opt.s);
+                    container.appendChild(btn);
+                });
+            },
+
+            handleSelect(score) {
+                this.score += score;
+                this.currentIndex++;
+
+                if (this.currentIndex < questions.length) {
+                    this.renderQuestion();
+                } else {
+                    this.showResult();
+                }
+            },
+
+            showResult() {
+                document.getElementById('quiz-view').classList.add('hidden');
+                document.getElementById('result-view').classList.remove('hidden');
+
+                // 判斷等級
+                let levelData = levels.L1;
+                for (const key in levels) {
+                    if (this.score >= levels[key].scoreRange[0] && this.score <= levels[key].scoreRange[1]) {
+                        levelData = levels[key];
+                        break;
+                    }
+                }
+                
+                // 最後一段保護邏輯 (超過滿分)
+                if (this.score > 60) levelData = levels.L5;
+
+                // UI 渲染
+                document.getElementById('result-level').innerText = levelData.name;
+                document.getElementById('result-description').innerText = levelData.desc;
+
+                // 進度圓環動畫
+                const maxScore = 60;
+                const percentage = Math.min(100, Math.round((this.score / maxScore) * 100));
+                const offset = 364.4 - (364.4 * percentage) / 100;
+                
+                setTimeout(() => {
+                    document.getElementById('score-circle').style.strokeDashoffset = offset;
+                    document.getElementById('score-text').innerText = `${percentage}%`;
+                }, 100);
+
+                // 下一步建議
+                const stepsList = document.getElementById('next-steps');
+                stepsList.innerHTML = '';
+                levelData.steps.forEach(step => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50";
+                    li.innerHTML = `
+                        <i data-lucide="check-circle-2" class="text-emerald-500 shrink-0 mt-1" size="18"></i>
+                        <span class="text-slate-300 text-sm md:text-base">${step}</span>
+                    `;
+                    stepsList.appendChild(li);
+                });
+                
+                lucide.createIcons();
+            }
+        };
+
+        // 初始化圖標
+        window.onload = () => {
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
